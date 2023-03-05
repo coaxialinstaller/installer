@@ -23,18 +23,22 @@ cd $program-install
 
 if [[ $PM == "apt" ]]
 then
+    echo "Downloading $program..."
     for i in $dependencies
     do
-        apt download $i || fail=true
+        apt download $i 1>/dev/null || fail=true
         $fail && break
     done
 elif [[ $PM == "pacman" ]]
+then
     sudo mkdir -p /var/cache/pacman/pkg-tmp
     sudo mv /var/cache/pacman/pkg/* /var/cache/pacman/pkg-tmp
 
+    echo "Downloading $program..."
+
     for i in $dependencies
     do
-        sudo pacman -Sw --noconfirm $i
+        sudo pacman -Sw --noconfirm $i 1>/dev/null
 
     done
     sudo mv /var/cache/pacman/pkg/* .
