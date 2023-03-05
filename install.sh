@@ -24,10 +24,10 @@ then
     echo "Installing $program..."
     for i in $(ls $program-install | grep -v .sig)
     do
-        sudo pacman -U --noconfirm $program-install/$i 1>/dev/null
+        sudo pacman -U --noconfirm $program-install/$i &>/dev/null
     done
 elif [[ $PM == "apt" ]]
 then
     echo "Installing $program..."
-    sudo dpkg -i $program-install/* 1>/dev/null
+    sudo dpkg -i $program-install/* &>/dev/null
 fi

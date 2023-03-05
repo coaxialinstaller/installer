@@ -26,7 +26,7 @@ then
     echo "Downloading $program..."
     for i in $dependencies
     do
-        apt download $i 1>/dev/null || fail=true
+        apt download $i &>/dev/null || fail=true
         $fail && break
     done
 elif [[ $PM == "pacman" ]]
@@ -38,7 +38,7 @@ then
 
     for i in $dependencies
     do
-        sudo pacman -Sw --noconfirm $i 1>/dev/null
+        sudo pacman -Sw --noconfirm $i &>/dev/null
 
     done
     sudo mv /var/cache/pacman/pkg/* .
