@@ -6,7 +6,7 @@ then
     exit 1
 fi
 
-sudo echo
+sudo echo &>/dev/null
 
 program=$1
 
@@ -15,12 +15,9 @@ which pacman 2>/dev/null | grep /pacman &>/dev/null && PM="pacman"
 [[ $PM == "" ]] && echo No && exit 0
 
 exit=false
-ls $program-install > /dev/null || $exit=true
-if [[ $(exit) == true ]]
-then
-echo "Program not install in the directory"
-exit 0
-fi
+ls $program-install &>/dev/null || exit=true
+$exit && echo "Program not install in the directory"
+$exit && exit 0
 
 if [[ $PM == "pacman" ]]
 then
