@@ -6,6 +6,13 @@ then
     exit 1
 fi
 
+repeatChar() {
+    local input="$1"
+    local count="$2"
+    printf -v myString '%*s' "$count"
+    printf '%s\n' "${myString// /$input}"
+}
+
 fail=false
 program=$1
 
@@ -34,11 +41,21 @@ then
     sudo mkdir -p /var/cache/pacman/pkg-tmp
     sudo mv /var/cache/pacman/pkg/* /var/cache/pacman/pkg-tmp
 
+    packages=$(echo $dependencies | wc -l)
+    po=30
+    fo=0
+
     echo "Downloading $program..."
+    str=$(repeatChar "=" $(($fo/$packages*$po)))$(repeatChar "-" $(($po-($fo/$packages*$po))) )
+    echo -ne "\r[$str] ($(($fo/$po))%)"
 
     for i in $dependencies
     do
         sudo pacman -Sw --noconfirm $i &>/dev/null
+
+        fo=$(($fo+1))
+        str=$(repeatChar "=" $(($fo/$packages*$po)))$(repeatChar "-" $(($po-($fo/$packages*$po))) )
+        echo -ne "\r[$str] ($(($fo/$po))%)"
 
     done
     sudo mv /var/cache/pacman/pkg/* .
