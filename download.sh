@@ -61,7 +61,6 @@ deldir=false
 [[ $PM == "apt" ]] && apt-cache depends $program 2>/dev/null | grep -vE "Recommends|Suggests|Breaks|Conflicts|Depends: <" | sed 's/.*Depends: //' | sed 's/\ *//' > dependencies
 [[ $PM == "pacman" ]] && sudo pacman -Qi $program 2>/dev/null | grep "Depends On" | sed 's/.*: //' | perl -pe 's/ +/\n/g' > dependencies
 ! [[ $PM == "pip" ]] && [[ $(cat dependencies) == "" ]] && fail=true
-[[ $PM == "pip" ]] && sudo pip download $program || fail=true
 $fail && cd .. && rm -rf $program-install && echo "Faild to download program $program, program was not found!" &&  exit 1
 [[ $PM == "pacman" ]] && echo $program >> dependencies
 
@@ -118,8 +117,8 @@ then
 
     for i in $(cat dependencies)
     do
-        sudo pacman -Sw --noconfirm $i &>/dev/null
-
+        sudo pacman -Sw --noconfirm $i &>/dev/null || fail=true
+        $fail && break
         fo=$(($fo+1))
 
         big=$(((($po*100/$packages)*$fo)/100))
@@ -142,6 +141,27 @@ then
     sudo mv /var/cache/pacman/pkg/* .
     sudo mv /var/cache/pacman/pkg-tmp/* /var/cache/pacman/pkg
     sudo rm -rf /var/cache/pacman/pkg-tmp
+elif [[ $PM == "pip" ]]
+then
+    pip --version > /dev/null || fail=true
+    $fail && echo "Pip not installed" && exit 1
+
+    po=30
+
+    echo "Downloading $program..."
+    str=$(repeatChar "-" $po)
+    echo -ne "[$str] (0%)"
+    pip download $program &>/dev/null || fail=true
+
+    $fail && echo && echo "Faild to download program $program, program was not found!"
+    $fail && $deldir && cd .. && rm -rf $program-install
+    $fail && exit 1
+
+    str=$(repeatChar "=" $po)
+    echo -ne "\r[$str] (100%)"
+    echo
+    echo "Finished Downloading $program."
+
 fi
 
 cd - > /dev/null
