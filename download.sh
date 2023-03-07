@@ -49,7 +49,7 @@ $no_internet && echo "Failed to download program $program, no internet connectio
 
 ! [[ $PM == "pip" ]] && which apt 2>/dev/null | grep /apt &>/dev/null && PM="apt"
 ! [[ $PM == "pip" ]] && which pacman 2>/dev/null | grep /pacman &>/dev/null && PM="pacman"
-[[ $PM == "" ]] && echo No && exit 0
+[[ $PM == "" ]] && echo "Error: Couldn't recognize package manager..." && exit 0
 
 
 mkdir -p $program-install
@@ -96,7 +96,7 @@ then
     str=$(repeatChar "=" $po)
     echo -ne "\r[$str] (100%)"
     echo
-    echo "Finished Downloading $program."
+    echo "Finished downloading $program successfully!"
     rm dependencies
 
 
@@ -135,7 +135,7 @@ then
     str=$(repeatChar "=" $po)
     echo -ne "\r[$str] (100%)"
     echo
-    echo "Finished Downloading $program."
+    echo "Finished downloading $program successfully!"
     rm dependencies
 
     sudo mv /var/cache/pacman/pkg/* .
@@ -160,7 +160,7 @@ then
     str=$(repeatChar "=" $po)
     echo -ne "\r[$str] (100%)"
     echo
-    echo "Finished Downloading $program."
+    echo "Finished downloading $program successfully!"
 
 fi
 
