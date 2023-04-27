@@ -24,13 +24,37 @@ then
     exit 1
 fi
 
-sudo echo > /dev/null
+if [[ $2 == "--full" ]]
+then
+full=true
+else
+full=false
+fi
+
+sudo echo
 
 repeatChar() {
     local input="$1"
     local count="$2"
     printf -v myString '%*s' "$count"
     printf '%s\n' "${myString// /$input}"
+}
+
+full_() {
+    for depends in $(cat dependencies)
+    do
+        deps=$([[ $PM == "apt" ]] && apt-cache depends $depends 2>/dev/null | grep -vE "Recommends|Suggests|Breaks|Conflicts|Depends: <|Replaces:" | sed 's/.*Depends: //' | sed 's/\ *//')
+        for x in deps
+        do
+            if ! [[ $(grep -P "^$x$" dependencies) ]]
+            then
+            echo $x >> dependencies
+            going=true
+            else
+            going=false
+            fi
+        done
+    done
 }
 
 fail=false
@@ -58,12 +82,25 @@ deldir=false
 [[ $(ls) == "" ]] && deldir=true
 
 
-[[ $PM == "apt" ]] && apt-cache depends $program 2>/dev/null | grep -vE "Recommends|Suggests|Breaks|Conflicts|Depends: <" | sed 's/.*Depends: //' | sed 's/\ *//' > dependencies
+[[ $PM == "apt" ]] && apt-cache depends $program 2>/dev/null | grep -vE "Recommends|Suggests|Breaks|Conflicts|Depends: <|Replaces:" | sed 's/.*Depends: //' | sed 's/\ *//' > dependencies
 [[ $PM == "pacman" ]] && sudo pacman -Qi $program 2>/dev/null | grep "Depends On" | sed 's/.*: //' | perl -pe 's/ +/\n/g' > dependencies
 ! [[ $PM == "pip" ]] && [[ $(cat dependencies) == "" ]] && fail=true
 $fail && cd .. && rm -rf $program-install && echo "Faild to download program $program, program was not found!" &&  exit 1
 [[ $PM == "pacman" ]] && echo $program >> dependencies
 
+
+if [[ $full ]]
+then
+    going=true
+    while $going
+    do
+        full_
+    done
+fi
+
+cat dependencies
+
+exit 1
 
 if [[ $PM == "apt" ]]
 then
