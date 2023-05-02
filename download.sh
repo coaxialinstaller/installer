@@ -1,29 +1,5 @@
 #!/bin/bash
 
-if [[ $1 == "--pip" ]]
-then
-    if [[ $2 == "" ]]
-    then
-        echo "--pip (optional) program (requierd)"
-        exit 1
-    fi
-fi
-
-if ! [[ $1 == "--pip" ]]
-then
-    if ! [[ $2 == "" ]]
-    then
-        echo "--pip (optional) program (requierd)"
-        exit 1
-    fi
-fi
-
-if [[ $1 == "" ]]
-then
-    echo "--pip (optional) program (requierd)"
-    exit 1
-fi
-
 if [[ $2 == "--full" ]]
 then
 full=true
@@ -41,29 +17,34 @@ repeatChar() {
 }
 
 full_() {
+    added=no
     for depends in $(cat dependencies)
     do
-        deps=$([[ $PM == "apt" ]] && apt-cache depends $depends 2>/dev/null | grep -vE "Recommends|Suggests|Breaks|Conflicts|Depends: <|Replaces:" | sed 's/.*Depends: //' | sed 's/\ *//')
-        for x in deps
+        deps=$([[ $PM == "apt" ]] && apt-cache depends $depends 2>/dev/null | grep -vE "Recommends|Suggests|Breaks|Conflicts|Depends: <|Replaces:|Enhances:" | sed 's/.*Depends: //' | sed 's/\ *//')
+        for x in $deps
         do
-            if ! [[ $(grep -P "^$x$" dependencies) ]]
-            then
             echo $x >> dependencies
-            going=true
+            
+            added=yes
+            echo yes
             else
-            going=false
+            echo no
             fi
         done
     done
+
+    if [[$added == no]]
+    then
+    going=false
+    fi
 }
 
-fail=false
-if ! [[ $2 == "" ]]
-then
-program=$2
-PM="pip"
-else
 program=$1
+
+fail=false
+if [[ $2 == "--pip" ]]
+then
+PM="pip"
 fi
 
 no_internet=false
@@ -82,12 +63,11 @@ deldir=false
 [[ $(ls) == "" ]] && deldir=true
 
 
-[[ $PM == "apt" ]] && apt-cache depends $program 2>/dev/null | grep -vE "Recommends|Suggests|Breaks|Conflicts|Depends: <|Replaces:" | sed 's/.*Depends: //' | sed 's/\ *//' > dependencies
+[[ $PM == "apt" ]] && apt-cache depends $program | grep -vE "Recommends|Suggests|Breaks|Conflicts|Depends: <|Replaces:|Enhances:" | sed 's/.*Depends: //' | sed 's/\ *//' > dependencies
 [[ $PM == "pacman" ]] && sudo pacman -Qi $program 2>/dev/null | grep "Depends On" | sed 's/.*: //' | perl -pe 's/ +/\n/g' > dependencies
 ! [[ $PM == "pip" ]] && [[ $(cat dependencies) == "" ]] && fail=true
 $fail && cd .. && rm -rf $program-install && echo "Faild to download program $program, program was not found!" &&  exit 1
 [[ $PM == "pacman" ]] && echo $program >> dependencies
-
 
 if [[ $full ]]
 then
